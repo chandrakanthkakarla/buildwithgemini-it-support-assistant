@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IT Support AI Agent</title>
+<!-- Material Symbols for A2UI and interface icons -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+<!-- Marked.js for rendering assistant markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9f9fb;
+    --bg-sidebar: #f0f4f9;
+    --bg-chat: #ffffff;
+    --bg-user-msg: #f0f4f9;
+    --bg-assistant-msg: transparent;
+    --border-color: #e5e7eb;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --sidebar-width: 260px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+  }
+
+  [data-theme="dark"] {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --bg-sidebar: #171717;
+    --bg-chat: #212121;
+    --bg-user-msg: #2f2f2f;
+    --bg-assistant-msg: transparent;
+    --border-color: #374151;
+    --text-primary: #ececec;
+    --text-secondary: #9ca3af;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-chat);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* --- Sidebar Styles --- */
+  #sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    transition: transform 0.2s ease-in-out;
+    z-index: 20;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .app-title .icon {
+    font-size: 1.5rem;
+  }
+
+  .btn-new-chat {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .btn-new-chat:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  [data-theme="dark"] .btn-new-chat:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 1rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-decoration: none;
+    margin-bottom: 0.25rem;
+  }
+
+  .nav-item:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  [data-theme="dark"] .nav-item:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .sidebar-footer {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+
+  .theme-toggle:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--text-primary);
+  }
+  [data-theme="dark"] .theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .attribution {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 0 0.75rem 0.5rem 0.75rem;
+  }
+
+  /* --- Main Container --- */
+  #main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--bg-chat);
+    position: relative;
+    min-width: 0; /* Important for flexbox scrolling containment */
+  }
+
+  .top-bar {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .mobile-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* --- Chat Area --- */
+  #chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1rem 0 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .chat-wrapper {
+    width: 100%;
+    max-width: 768px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Welcome Screen */
+  #welcome-screen {
+    text-align: center;
+    margin: 10vh auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .welcome-icon {
+    font-size: 3rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+  }
+
+  .welcome-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+  }
+
+  .welcome-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  .example-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .prompt-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+
+  .prompt-card:hover {
+    background: var(--bg-secondary);
+  }
+
+  .prompt-card .icon-arrow {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+  }
+
+  /* Messages */
+  .msg-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    padding: 1rem 0;
+  }
+  
+  .msg-row.user {
+    justify-content: flex-end;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+  }
+  
+  .msg-row.assistant .avatar {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+
+  .msg-content {
+    max-width: 80%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevent wide content from breaking flex */
+  }
+  
+  .msg-row.assistant .msg-content {
+    max-width: calc(100% - 48px);
+  }
+
+  .msg-bubble {
+    font-size: 1rem;
+    line-height: 1.6;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .msg-row.user .msg-bubble {
+    background: var(--bg-user-msg);
+    color: var(--text-primary);
+    padding: 0.75rem 1.25rem;
+    border-radius: 1.25rem;
+  }
+
+  .msg-row.assistant .msg-bubble {
+    background: var(--bg-assistant-msg);
+    color: var(--text-primary);
+    padding: 0.25rem 0;
+  }
+
+  /* Formatting inside messages */
+  .msg-bubble p { margin: 0 0 1rem 0; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  
+  .msg-bubble code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85em;
+  }
+  [data-theme="dark"] .msg-bubble code {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .msg-bubble pre {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+  }
+  .msg-bubble pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+  
+  .msg-bubble table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .msg-bubble th, .msg-bubble td {
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  /* When reply is rich A2UI card */
+  .msg-bubble.rich {
+    padding: 0;
+    width: 100%;
+  }
+
+  /* Typing Indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+  }
+
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* --- Input Area --- */
+  .input-area {
+    width: 100%;
+    max-width: 768px;
+    margin: 0 auto;
+    padding: 1rem;
+    background: var(--bg-chat);
+  }
+
+  .input-container {
+    display: flex;
+    align-items: flex-end;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    padding: 0.5rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.05);
+    position: relative;
+  }
+  [data-theme="dark"] .input-container {
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  }
+
+  .input-container:focus-within {
+    border-color: var(--text-secondary);
+  }
+
+  textarea {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    resize: none;
+    max-height: 200px;
+    min-height: 24px;
+    line-height: 1.5;
+    padding: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+
+  .btn-send {
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, opacity 0.15s ease;
+    margin: 0.25rem;
+  }
+  
+  .btn-send .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
+
+  .btn-send:disabled {
+    background: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* --- A2UI Component Styles (Responsive) --- */
+  .a2card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    background: var(--bg-primary);
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 1rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+  .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; min-width: 0; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.5; word-wrap: break-word; }
+  .a2text.a2-h1 { font-size: 1.25rem; font-weight: 600; }
+  .a2text.a2-h2 { font-size: 1.15rem; font-weight: 600; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.85rem; color: var(--text-secondary); }
+  .a2divider { border: none; border-top: 1px solid var(--border-color); margin: 0.75rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: var(--radius-sm); display: block; }
+  .a2video { width: 100%; max-width: 600px; border-radius: var(--radius-md); background: #000; border: 1px solid var(--border-color); display: block; }
+  .a2video-heading { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; }
+  .a2link { color: var(--primary-color); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+  .a2link:hover { text-decoration: underline; }
+  
+  /* --- Screen Overlay for Mobile Menu --- */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 15;
+  }
+
+  /* --- Responsive Breakpoints --- */
+  @media (max-width: 768px) {
+    #sidebar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      transform: translateX(-100%);
+      box-shadow: var(--shadow-md);
+      width: 280px;
+    }
+
+    #sidebar.open {
+      transform: translateX(0);
+    }
+    
+    .overlay.open {
+      display: block;
+    }
+
+    .top-bar {
+      display: flex;
+    }
+    
+    .msg-content {
+      max-width: 90%;
+    }
+    
+    .msg-row.assistant .msg-content {
+      max-width: calc(100% - 40px);
+    }
+    
+    .welcome-title {
+      font-size: 1.25rem;
+    }
+    
+    .input-area {
+      padding: 0.75rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar">
+  <div class="sidebar-header">
+    <button class="btn-new-chat" id="new-chat-btn">
+      <span class="material-symbols-outlined">add</span>
+      <span>New chat</span>
+    </button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- Clean minimal nav area -->
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="theme-toggle" id="theme-toggle">
+      <span id="theme-label">Dark Mode</span>
+      <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+    </div>
+    <div class="attribution">Built by Chandrakanth</div>
+  </div>
+</aside>
+
+<!-- Main Chat Container -->
+<main id="main-content">
+  <div class="top-bar">
+    <button class="mobile-menu-btn" id="mobile-menu-btn">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <div class="app-title" style="font-weight:600; font-size:1rem;">IT Support AI Agent</div>
+    <button class="mobile-menu-btn" id="mobile-new-chat-btn">
+      <span class="material-symbols-outlined">edit_square</span>
+    </button>
+  </div>
+
+  <div id="chat-container">
+    <div class="chat-wrapper" id="chat-wrapper">
+      
+      <!-- Welcome Screen -->
+      <div id="welcome-screen">
+        <span class="material-symbols-outlined welcome-icon">smart_toy</span>
+        <h1 class="welcome-title">IT Support AI Agent</h1>
+        <p class="welcome-subtitle">How can I help you today?</p>
+
+        <div class="example-prompts">
+          <div class="prompt-card" onclick="sendPrompt('Show me the Linux permission troubleshooting guide')">
+            <div>Show me the Linux permission troubleshooting guide</div>
+            <span class="material-symbols-outlined icon-arrow">arrow_upward_alt</span>
+          </div>
+          <div class="prompt-card" onclick="sendPrompt('Can you ping 8.8.8.8?')">
+            <div>Can you ping 8.8.8.8?</div>
+            <span class="material-symbols-outlined icon-arrow">arrow_upward_alt</span>
+          </div>
+          <div class="prompt-card" onclick="sendPrompt('How do I troubleshoot a DNS problem?')">
+            <div>How do I troubleshoot a DNS problem?</div>
+            <span class="material-symbols-outlined icon-arrow">arrow_upward_alt</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Chat Input -->
+  <div class="input-area">
+    <form id="form">
+      <div class="input-container">
+        <textarea id="input" rows="1" placeholder="Message IT Support AI Agent..." autofocus></textarea>
+        <button type="submit" class="btn-send" id="send-btn" disabled>
+          <span class="material-symbols-outlined">arrow_upward</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script>
+const chatWrapper = document.getElementById("chat-wrapper");
+const welcomeScreen = document.getElementById("welcome-screen");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send-btn");
+const newChatBtn = document.getElementById("new-chat-btn");
+const mobileNewChatBtn = document.getElementById("mobile-new-chat-btn");
+const themeToggle = document.getElementById("theme-toggle");
+const themeLabel = document.getElementById("theme-label");
+const themeIcon = document.getElementById("theme-icon");
+const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+
+let isWaiting = false;
+
+// Configure marked.js options for safety and formatting
+if (window.marked) {
+  marked.setOptions({
+    breaks: true,
+    gfm: true,
+  });
+}
+
+// --- Auto-resize textarea & enable/disable button ---
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 200) + "px";
+  
+  if (input.value.trim() && !isWaiting) {
+    sendBtn.disabled = false;
+  } else {
+    sendBtn.disabled = true;
+  }
+});
+
+// --- Handle Enter vs Shift+Enter ---
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    if (!isWaiting && input.value.trim()) {
+      form.dispatchEvent(new Event("submit"));
+    }
+  }
+});
+
+// --- Theme Toggle ---
+themeToggle.addEventListener("click", () => {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  themeLabel.textContent = newTheme === "dark" ? "Light Mode" : "Dark Mode";
+  themeIcon.textContent = newTheme === "dark" ? "light_mode" : "dark_mode";
+});
+
+// --- Mobile Sidebar Toggle ---
+function closeMenu() {
+  sidebar.classList.remove("open");
+  overlay.classList.remove("open");
+}
+
+if (mobileMenuBtn) {
+  mobileMenuBtn.addEventListener("click", () => {
+    sidebar.classList.add("open");
+    overlay.classList.add("open");
+  });
+}
+
+overlay.addEventListener("click", closeMenu);
+
+// --- New Chat Button ---
+function handleNewChat() {
+  chatWrapper.innerHTML = "";
+  chatWrapper.appendChild(welcomeScreen);
+  welcomeScreen.style.display = "flex";
+  input.value = "";
+  input.style.height = "auto";
+  sendBtn.disabled = true;
+  closeMenu();
+}
+
+newChatBtn.addEventListener("click", handleNewChat);
+if (mobileNewChatBtn) mobileNewChatBtn.addEventListener("click", handleNewChat);
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function appendMessage(role) {
+  if (welcomeScreen.style.display !== "none") {
+    welcomeScreen.style.display = "none";
+  }
+
+  const row = el("div", "msg-row " + role);
+  
+  const content = el("div", "msg-content");
+  const bubble = el("div", "msg-bubble");
+  content.appendChild(bubble);
+
+  if (role === "user") {
+    row.appendChild(content);
+  } else {
+    const avatar = el("div", "avatar");
+    const icon = el("span", "material-symbols-outlined", "smart_toy");
+    icon.style.fontSize = "1.2rem";
+    avatar.appendChild(icon);
+    row.appendChild(avatar);
+    row.appendChild(content);
+  }
+
+  chatWrapper.appendChild(row);
+  const container = document.getElementById("chat-container");
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function showTypingIndicator() {
+  const bubble = appendMessage("assistant");
+  const typing = el("div", "typing-indicator");
+  typing.appendChild(el("div", "typing-dot"));
+  typing.appendChild(el("div", "typing-dot"));
+  typing.appendChild(el("div", "typing-dot"));
+  bubble.appendChild(typing);
+  
+  const container = document.getElementById("chat-container");
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function sendPrompt(promptText) {
+  input.value = promptText;
+  input.style.height = "auto";
+  sendBtn.disabled = false;
+  form.dispatchEvent(new Event("submit"));
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * -------------------------------------------------------------------------- */
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) {
+  return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase();
+}
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    case "Video": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) {
+        const fallback = el("div", "a2text a2-caption");
+        fallback.textContent = "Video URL unavailable or invalid.";
+        return fallback;
+      }
+      
+      const container = el("div", "a2col");
+      
+      const heading = el("div", "a2text a2video-heading");
+      heading.textContent = "Generated Video";
+      
+      const vid = el("video", "a2video");
+      vid.src = src;
+      vid.controls = true;
+      vid.playsInline = true;
+      
+      const linkContainer = el("div", "a2row");
+      const link = el("a", "a2link");
+      link.href = src;
+      link.target = "_blank";
+      link.textContent = "Open video ↗";
+      linkContainer.appendChild(link);
+      
+      container.appendChild(heading);
+      container.appendChild(vid);
+      container.appendChild(linkContainer);
+      return container;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(bubble, parts) {
+  bubble.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) {
+    if (window.marked) {
+      bubble.innerHTML = marked.parse(textStr);
+    } else {
+      bubble.textContent = textStr;
+    }
+  }
+
+  if (a2ui.length) {
+    bubble.classList.add("rich");
+    if (!renderSurface(a2ui, bubble)) {
+      bubble.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+    }
+  }
+
+  if (!bubble.childNodes.length) {
+    bubble.textContent = "(no response)";
+  }
+
+  const container = document.getElementById("chat-container");
+  container.scrollTop = container.scrollHeight;
+}
+
+// --- Submit Event Handler ---
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  if (!text || isWaiting) return;
+
+  // Append user message
+  const userBubble = appendMessage("user");
+  userBubble.textContent = text;
+
+  input.value = "";
+  input.style.height = "auto";
+  sendBtn.disabled = true;
+  isWaiting = true;
+
+  // Show typing indicator
+  const assistantBubble = showTypingIndicator();
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+
+    renderReply(assistantBubble, data.parts || []);
+  } catch (e) {
+    assistantBubble.textContent = "Error: " + e.message;
+  } finally {
+    isWaiting = false;
+  }
+});
+</script>
+</body>
+</html>
