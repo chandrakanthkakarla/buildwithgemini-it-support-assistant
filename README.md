@@ -4,9 +4,9 @@
 
 # 🚀 Build with Gemini · Track 3
 
-### The starter kit for Track 3 of the Build with Gemini World Tour, and a showcase of participant projects.
+### The starter kit for Track 3 of the Build with Gemini World Tour.
 
-Clone this repo, open [Antigravity](https://antigravity.google), and build your agent-first app on Google Cloud. Every featured project was prototyped with Antigravity and `agents-cli`, equipped with Memory, tools, and storage, deployed to Agent Platform, and hosted on Cloud Run.
+Clone this repo, open [Antigravity](https://antigravity.google), and build your agent-first app on Google Cloud. Every project is prototyped with Antigravity and `agents-cli`, equipped with Memory, tools, and storage, deployed to Agent Platform, and hosted on Cloud Run.
 
 <sub>📖 <a href="https://cszhu.github.io/build-with-gemini/">Lab Guide</a> · 🛠️ <a href="https://google.github.io/agents-cli/guide/getting-started/">agents-cli</a> · 🤖 <a href="https://google.github.io/adk-docs/">ADK</a></sub>
 
@@ -17,11 +17,9 @@ Clone this repo, open [Antigravity](https://antigravity.google), and build your 
 ## 📚 Table of Contents
 
 - [🧩 Anatomy of a Track 3 Project](#-anatomy-of-a-track-3-project)
-- [📂 Featured Projects](#-featured-projects)
 - [🧠 What's in this Repo](#-whats-in-this-repo)
 - [🧰 Build Your Own](#-build-your-own)
 - [📚 Resources](#-resources)
-- [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
 ---
@@ -41,36 +39,6 @@ Every app in this collection uses standard Google Cloud building blocks:
 | 🧪 **Code Sandbox** | Safely runs generated code | Agent Platform code execution |
 | 🪟 **Agent-first UI** | Cards and tables UI | [A2UI](https://adk.dev/integrations/a2ui/) |
 | 🌐 **Frontend** | Shareable web UI | FastAPI proxy on [Cloud Run](https://cloud.google.com/run) |
-
----
-
-## 📂 Featured Projects
-
-### 🍳 Food & Recipe Agents
-
-- 🥫 **[Smart Pantry Recipe Concierge](https://github.com/matthewrose/buildwithgemini-smart-pantry-recipe-concierge)**: Tracks your pantry and recommends recipes grounded in a real recipe corpus. <br/> <sub>by [@matthewrose](https://github.com/matthewrose)</sub>
-
-### ✈️ Travel & Local Agents
-
-- ⛈️ **[SafeStageWX](https://github.com/felix1028/buildwithgemini-safestagewx)**: An agentic mobile app that helps event planners identify weather threats and climate risks for an event given its date and location. <br/> <sub>by [@felix1028](https://github.com/felix1028)</sub>
-- 🌇 **[Sidewalk & Sun](https://github.com/OlafHaalstra/buildwithgemini-sidewalk-and-sun)**: Recommends sunny or shaded NYC spots from a curated 500-venue corpus, plotted on an interactive map. <br/> <sub>by [@OlafHaalstra](https://github.com/OlafHaalstra)</sub>
-
-### 💪 Health, Fitness & Wellness Agents
-
-- 🏊 **[TriCoach AI](https://github.com/common-aman/buildwithgemini-tricoach-ai)**: A triathlon coach that logs workouts, computes training zones, and generates motivational visuals. <br/> <sub>by [@common-aman](https://github.com/common-aman)</sub>
-
-### 📚 Learning & Knowledge Agents
-
-- 🎤 **[Interview Coach (PrepPal)](https://github.com/VineethBaradi/buildwithgemini-interview-coach)**: A mock-interview coach that runs LLM-driven practice sessions from a Firestore question bank. <br/> <sub>by [@VineethBaradi](https://github.com/VineethBaradi)</sub>
-
-### 🏢 Productivity & Enterprise Agents
-
-- 🔧 **[GitCraft](https://github.com/fpobletemu/buildwithgemini-gitcraft)**: A developer git assistant that inspects your repo and drafts Conventional-Commits-style messages. <br/> <sub>by [@fpobletemu](https://github.com/fpobletemu)</sub>
-- 🖥️ **[IT Helpdesk Agent](https://github.com/NaweedAhmadi/buildwithgemini-it-helpdesk-agent)**: An IT support assistant that answers from a knowledge base and retains context across sessions. <br/> <sub>by [@NaweedAhmadi](https://github.com/NaweedAhmadi)</sub>
-
-### 🧪 Experimental & Other
-
-- 🃏 **[Poker Agent](https://github.com/jakecho1108/buildwithgemini-poker-agent)**: A poker trainer with a real 800-iteration Monte Carlo equity engine and strategy tips. <br/> <sub>by [@jakecho1108](https://github.com/jakecho1108)</sub>
 
 ---
 
